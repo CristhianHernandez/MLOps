@@ -14,14 +14,19 @@ parámetros, métricas, artefactos y modelo.
 
 ## Requisitos
 
-- Python **3.13** (el proyecto se validó con 3.13.15 en macOS arm64).
-- Acceso a internet solo la primera vez, para descargar los datos desde UCI.
+- Python **3.13** (el proyecto se validó con 3.13.15). En Windows se instala desde
+  [python.org](https://www.python.org/downloads/) o con `winget install Python.Python.3.13`.
+- Git y acceso a internet (para instalar las dependencias y, la primera vez, descargar los datos
+  desde UCI).
 
-## Instalación
+Todas las dependencias fijadas tienen paquetes precompilados para macOS, Linux y Windows x64 con
+Python 3.13: no se necesita compilador.
 
-Desde la raíz del proyecto (`diabetes-mlops-v2/`):
+## Instalación y ejecución en macOS / Linux
 
 ```bash
+git clone https://github.com/CristhianHernandez/MLOps.git
+cd MLOps
 python3.13 -m venv .venv
 source .venv/bin/activate
 make requirements          # instala las versiones exactas de requirements-dev.txt + el paquete
@@ -31,11 +36,11 @@ cp .env.example .env       # configuración local de MLflow (ver abajo)
 `make requirements` equivale a:
 
 ```bash
-pip install -r requirements-dev.txt     # dependencias fijadas (incluye requirements.txt)
-pip install -e . --no-deps              # el paquete diabetes_mlops_v2 en modo editable
+python -m pip install -r requirements-dev.txt     # dependencias fijadas (incluye requirements.txt)
+python -m pip install -e . --no-deps              # el paquete diabetes_mlops_v2 en modo editable
 ```
 
-### Archivos de dependencias
+## Archivos de dependencias
 
 | Archivo | Contenido |
 |---|---|
@@ -43,7 +48,7 @@ pip install -e . --no-deps              # el paquete diabetes_mlops_v2 en modo e
 | `requirements-dev.txt` | `requirements.txt` + herramientas de desarrollo fijadas (`pytest`, `black`, `isort`, `flake8`, `mkdocs`) |
 | `pyproject.toml` | Metadatos del paquete y rangos compatibles de las dependencias directas |
 
-## Ejecución
+### Ejecución
 
 **1. Levantar el servidor de MLflow** (en una terminal aparte, dejarla abierta):
 
@@ -70,7 +75,63 @@ make train ARGS="--C 1 --solver liblinear"                       # equivalente c
 La última corrida también se guarda localmente en `models/modelo_base.joblib`,
 `reports/resultados.json`, `reports/seleccion_c.csv` y `reports/figures/`.
 
-### Argumentos del script de entrenamiento
+## Instalación y ejecución en Windows
+
+Windows no incluye `make`, así que se usan directamente los comandos que ejecuta cada regla del
+`Makefile`. Los siguientes comandos son para **PowerShell**, desde la carpeta donde se quiera
+clonar el repositorio.
+
+**Instalación** (una sola vez):
+
+```powershell
+git clone https://github.com/CristhianHernandez/MLOps.git
+cd MLOps
+py -3.13 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+python -m pip install -e . --no-deps
+Copy-Item .env.example .env
+```
+
+> Si `Activate.ps1` falla con *"la ejecución de scripts está deshabilitada en este sistema"*,
+> permite los scripts solo para la terminal actual y vuelve a activar el entorno:
+> `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`, seguido de
+> `.venv\Scripts\Activate.ps1`. En `cmd.exe` el entorno se activa con `.venv\Scripts\activate.bat`.
+
+**Terminal 1: servidor de MLflow** (activar el entorno y dejarla abierta):
+
+```powershell
+cd MLOps
+.venv\Scripts\Activate.ps1
+mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-destination ./mlartifacts --host 127.0.0.1 --port 5000
+```
+
+**Terminal 2: datos, entrenamiento y pruebas:**
+
+```powershell
+cd MLOps
+.venv\Scripts\Activate.ps1
+python -m diabetes_mlops_v2.dataset                                # descarga y valida los datos
+python -m diabetes_mlops_v2.modeling.train                         # valores por defecto
+python -m diabetes_mlops_v2.modeling.train --C 0.1 --seed 7        # hiperparámetros personalizados
+python -m diabetes_mlops_v2.modeling.train --help                  # todos los argumentos
+python -m pytest                                                   # pruebas
+```
+
+Los resultados se consultan igual, en http://127.0.0.1:5000.
+
+### Equivalencia entre `make` y los comandos directos
+
+| Regla de `make` | Comando equivalente (cualquier sistema, con el entorno activado) |
+|---|---|
+| `make requirements` | `python -m pip install -r requirements-dev.txt` y `python -m pip install -e . --no-deps` |
+| `make mlflow-server` | `mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-destination ./mlartifacts --host 127.0.0.1 --port 5000` |
+| `make data` | `python -m diabetes_mlops_v2.dataset` |
+| `make train ARGS="..."` | `python -m diabetes_mlops_v2.modeling.train ...` |
+| `make test` | `python -m pytest` |
+| `make lint` | `flake8 diabetes_mlops_v2` · `isort --check --diff diabetes_mlops_v2` · `black --check diabetes_mlops_v2` |
+
+## Argumentos del script de entrenamiento
 
 | Argumento | Por defecto | Descripción |
 |---|---|---|
@@ -87,7 +148,7 @@ La última corrida también se guarda localmente en `models/modelo_base.joblib`,
 | `--experimento` | `MLFLOW_EXPERIMENT_NAME` del `.env` | Experimento donde se agrupan las corridas |
 | `--run-name` | generado, p. ej. `logreg-grid-balanced-lbfgs-seed42` | Nombre de la corrida |
 
-### Configuración de MLflow (`.env`)
+## Configuración de MLflow (`.env`)
 
 ```bash
 MLFLOW_TRACKING_URI=http://127.0.0.1:5000
@@ -99,7 +160,7 @@ MLFLOW_EXPERIMENT_NAME=diabetes-cdc-logreg
 > el servidor (`make mlflow-server`) o usa otro puerto (`make mlflow-server MLFLOW_PORT=5001` y
 > `MLFLOW_TRACKING_URI=http://127.0.0.1:5001` en `.env`).
 
-### Qué se registra en cada corrida
+## Qué se registra en cada corrida
 
 - **Parámetros** (`log_param`): semilla, limpieza, partición, hiperparámetros del modelo, `C` y
   umbral elegidos en validación, tamaño de cada partición y huella SHA-256 de los datos.
