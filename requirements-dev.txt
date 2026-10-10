@@ -1,0 +1,7 @@
+# Herramientas de desarrollo (pruebas, lint, formato y documentación) con versiones exactas.
+-r requirements.txt
+black==26.10.0
+flake8==7.4.1
+isort==9.0.2
+mkdocs==1.6.1
+pytest==9.1.1

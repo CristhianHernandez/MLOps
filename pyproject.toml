@@ -1,0 +1,57 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "diabetes_mlops_v2"
+version = "0.0.1"
+description = "Detección de prediabetes/diabetes (CDC Diabetes Health Indicators) con experimentos rastreados en MLflow."
+authors = [
+  { name = "Cris" },
+]
+license = { file = "LICENSE" }
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License"
+]
+requires-python = "~=3.13.0"
+# Rangos compatibles; las versiones exactas validadas están en requirements.txt
+dependencies = [
+    "joblib>=1.4",
+    "matplotlib>=3.9",
+    "mlflow>=3.0",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "python-dotenv>=1.0",
+    "scikit-learn>=1.5",
+    "seaborn>=0.13",
+    "ucimlrepo>=0.0.7",
+]
+
+[project.optional-dependencies]
+dev = ["black>=26", "flake8>=7", "isort>=9", "mkdocs>=1.6", "pytest>=9"]
+
+[project.scripts]
+diabetes-train = "diabetes_mlops_v2.modeling.train:main"
+diabetes-data = "diabetes_mlops_v2.dataset:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 99
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+)/
+'''
+
+[tool.isort]
+profile = "black"
+known_first_party = ["diabetes_mlops_v2"]
+force_sort_within_sections = true
+
+

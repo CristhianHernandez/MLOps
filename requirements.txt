@@ -1,0 +1,11 @@
+# Dependencias del proyecto con las versiones exactas con las que se ejecutó y validó
+# (Python 3.13.15, macOS arm64). Instalación: make requirements
+joblib==1.6.0          # serialización del modelo entrenado
+matplotlib==3.11.2     # gráficas de evaluación
+mlflow==3.16.1         # seguimiento de experimentos y registro del modelo
+numpy==2.5.3           # cálculo numérico
+pandas==3.0.6          # carga y manipulación de datos
+python-dotenv==1.2.3   # lectura de la configuración local (.env)
+scikit-learn==1.9.1    # pipeline, regresión logística y métricas
+seaborn==0.13.2        # estilo de gráficas y matriz de confusión
+ucimlrepo==0.0.7       # descarga del dataset desde UCI
